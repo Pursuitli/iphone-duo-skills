@@ -1,0 +1,17 @@
+{
+  "name": "iphone-duo-skills",
+  "owner": { "name": "Pursuit Li" },
+  "metadata": {
+    "description": "Agent skills for fitting apps to the iPhone Duo (Apple's foldable, iOS 27.1)",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "iphone-duo-fit",
+      "description": "Fit an existing iPhone app (SwiftUI or web/Capacitor) to every iPhone Duo pose: closed with the system's right-hand column, open upright, open on its side, and across a fold",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/iphone-duo-fit"]
+    }
+  ]
+}

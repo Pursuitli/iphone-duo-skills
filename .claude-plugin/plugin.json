@@ -1,0 +1,6 @@
+{
+  "name": "iphone-duo-fit",
+  "description": "Fit an existing iPhone app (SwiftUI or web/Capacitor) to every iPhone Duo pose",
+  "version": "1.0.0",
+  "author": { "name": "Pursuit Li" }
+}
