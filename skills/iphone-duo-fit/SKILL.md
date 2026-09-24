@@ -1,6 +1,6 @@
 ---
 name: iphone-duo-fit
-description: Fit an existing iPhone app to the iPhone Duo (Apple's foldable, iOS 27.1) so it is right in every pose — closed on the 466×678pt outer display with the system's vertical control column on the right, open upright at 626×890pt, open on its side at 890×626pt, and across a fold or a rotation mid-task — for SwiftUI/UIKit apps and for web/Capacitor apps alike. Use this whenever the user mentions the iPhone Duo, a foldable iPhone, "folded / unfolded", the outer or inner display, the Duo simulator, Xcode 27.1, a strip or sidebar of controls beside the clock, an app that looks stretched when the phone is opened or squeezed when it is closed, buttons that do not line up with the camera, a sheet that sits 8pt inside the screen, or an audit of how an app behaves on every Duo pose. Also use it when someone asks how to make an app "work on all screen sizes" and an iPhone is in scope, because the Duo is the size that breaks the usual phone/iPad split.
+description: Fit an existing iPhone app to the iPhone Duo (Apple's foldable, iOS 27.1) so it is right in every pose — closed on the 466×678pt outer display with the system's vertical control column on the right, open upright at 669×951pt, open on its side at 951×669pt, and across a fold or a rotation mid-task — for SwiftUI/UIKit apps and for web/Capacitor apps alike. Use this whenever the user mentions the iPhone Duo, a foldable iPhone, "folded / unfolded", the outer or inner display, the Duo simulator, Xcode 27.1, a strip or sidebar of controls beside the clock, an app that looks stretched when the phone is opened or squeezed when it is closed, buttons that do not line up with the camera, a sheet that sits 8pt inside the screen, or an audit of how an app behaves on every Duo pose. Also use it when someone asks how to make an app "work on all screen sizes" and an iPhone is in scope, because the Duo is the size that breaks the usual phone/iPad split.
 ---
 
 # Fitting an app to the iPhone Duo
@@ -19,6 +19,9 @@ does not hold.
 
 ## How to work
 
+0. **Build against the iOS 27.1 SDK.** An app built with an older SDK is
+   letterboxed on the open display and never sees the column; nothing below
+   applies to it. The App Store takes 27.1-built binaries once the GM ships.
 1. **Read `references/device-facts.md` first.** Sizes, poses, size classes,
    the system column's metrics, and what the simulator can and cannot do.
    Do not trust your memory of the Duo — it was announced on 2026-09-09 and
@@ -48,7 +51,9 @@ does not hold.
 
 ### 1. Layout is a width, and the width is measured
 
-The Duo is 466pt closed, 626pt open upright, 890pt open on its side. iOS
+The Duo is 466pt closed, 669pt open upright, 951pt open on its side (the
+669 × 951 is the logical raster; the 626 × 890 that most sites print is the
+physical panel ÷ 3, and an app never sees it). iOS
 reports **regular width and regular height in both orientations of the inner
 display**, so `horizontalSizeClass` says "iPad" the moment the phone opens,
 `userInterfaceIdiom` says "phone" in every pose, and `UIScreen.main.bounds`
@@ -68,21 +73,22 @@ change, and hands three named layouts down the tree:
 | 600 – 839 | tablet | the top bar arrives, the bottom bar retires; **still one column** |
 | ≥ 840 | split | a list beside a reading pane; the only place a split switches on |
 
-Why these numbers: 600 sits under the Duo open upright (626) and the iPad
+Why these numbers: 600 sits under the Duo open upright (669) and the iPad
 mini (744) and over the Duo closed (466) and every phone upright. 840 sits
 just above the widest iPad in portrait (834), so no iPad flips into a split
-when held upright, and under the Duo on its side (890). A fourth number (1120)
+when held upright, and well under the Duo on its side (951, with 84 of it
+the system's column, so 867 of usable width). A fourth number (1120)
 is a **density**, not a layout — wider list, wider pane — and must not create
 a fourth layout. Add the safe-area insets back into the measured width, or a
 Duo on its side reads 40pt narrower because of its own corners.
 
 If the app already has breakpoints, move them to these and keep the names;
 the usual 768 puts the Duo open upright in the phone layout stretched to
-626pt, which is the single most common Duo bug.
+669pt, which is the single most common Duo bug.
 
 ### 2. "Is this a Duo?" is asked once, from the device
 
-Width cannot tell a Duo open upright (626) from an iPad mini (744) in a
+Width cannot tell a Duo open upright (669) from an iPad mini (744) in a
 narrow window, and the Duo's closed pose needs chrome no other phone needs.
 So one device question sits **on top of** the width layout, never instead
 of it:
@@ -155,14 +161,15 @@ What that means for an app with its own bottom bar:
 
 ### 4. Open: the bar becomes a side bar, the split runs under the column
 
-- Upright (626): the **tablet** layout — still one column, a message opens
+- Upright (669): the **tablet** layout — still one column, a message opens
   over the list — with the bar's controls as **icons in a 72pt side bar on
   the leading edge** (the pill's own circles standing up, the prominent
   action at the foot) and the top bar gone. Names become accessibility
   labels. Nothing in the side bar shrinks or minimises on scroll.
-- On its side (890): the **split**. The inner display also reserves a
-  trailing column (about 85pt) for its clock; let the reading pane **run
-  under it** and keep only the pane's **subject / title row clear of the
+- On its side (951): the **split**. The inner display on its side reserves
+  the same trailing column (84pt) for its clock and bars — upright it keeps
+  horizontal bars instead (top 82 / bottom 83) — so let the reading pane
+  **run under it** and keep only the pane's **subject / title row clear of the
   clock** (axis 48 + ring 20.5 + 12 of air = about 80pt), with the row below
   running the whole width. A fixed-width pane (a calendar's event pane)
   keeps its measure with the column's worth of it under the column, so the
@@ -172,8 +179,12 @@ What that means for an app with its own bottom bar:
   verbs carry words grew off-screen when a Cc line outgrew it, read its own
   grown width as "wide", and locked. Read the offered width from the root
   and stack the verbs under 480pt of pane.
-- A top bar built for 834pt wraps at 626: replace it on the Duo with the
+- A top bar built for 834pt wraps at 669: replace it on the Duo with the
   side bar drawn inside the cover, verbs as circles under the places.
+- The fold on the open pose on its side is a division region about 40pt
+  wide down the middle of the safe width. Interactive elements (a divider,
+  a button) displace away from it; scrolling content does not. Read it from
+  `reservedRegions(kind: .division)` rather than assuming the centre.
 
 ### The fold and the rotation
 

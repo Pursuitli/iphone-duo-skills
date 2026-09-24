@@ -20,10 +20,10 @@ function measure(): Layout {
 }
 ```
 
-Why: 600 sits under the Duo open upright (626) and the iPad mini (744) and
+Why: 600 sits under the Duo open upright (669) and the iPad mini (744) and
 over the Duo closed (466) and every phone upright; 768 puts the open Duo in
-the phone layout stretched to 626 CSS px. 840 sits above the widest iPad in
-portrait (834) and under the Duo on its side (890), with ~50px of slack for
+the phone layout stretched to 669 CSS px. 840 sits above the widest iPad in
+portrait (834) and under the Duo on its side (951), with ~50px of slack for
 browser chrome; the Galaxy Z Fold line lands in the same band (~860–933).
 
 Publish the same threshold to CSS as a named variant (Tailwind v4:
@@ -100,7 +100,7 @@ the inset). Two honest options:
    1398 × 2034 screenshot).
 
 Either way, on the **open** pose the tablet layout's top bar is what a
-browser shows, and it must not wrap at 626px: check every word in it at that
+browser shows, and it must not wrap at 669px: check every word in it at that
 width.
 
 ## 5. The fold and the rotation
@@ -117,8 +117,8 @@ width.
 
 ## 6. Testing in a browser
 
-- Chrome DevTools → custom device: 466 × 678 and 626 × 890, DPR 3, mobile
-  UA; and 890 × 626 for the side pose. DevTools cannot show the reserved
+- Chrome DevTools → custom device: 466 × 678 and 669 × 951, DPR 3, mobile
+  UA; and 951 × 669 for the side pose. DevTools cannot show the reserved
   column; only the simulator can.
 - Drag the responsive width across 600 and 840 slowly and watch that each
   threshold fires exactly once and the chrome swaps without a flash.

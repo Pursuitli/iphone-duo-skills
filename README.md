@@ -8,8 +8,8 @@ right in every pose:
 | pose | window | what changes |
 |---|---|---|
 | closed | 466 × 678 pt | the system owns a vertical column on the right; your bar's controls move into it, on the camera's axis |
-| open, upright | 626 × 890 pt | tablet-class layout with the bar as a side bar; no phone chrome stretched to 626 |
-| open, on its side | 890 × 626 pt | a split, with the pane running under the reserved column |
+| open, upright | 669 × 951 pt | tablet-class layout with the bar as a side bar; no phone chrome stretched across 669pt |
+| open, on its side | 951 × 669 pt | a split, with the pane running under the reserved column |
 | fold / unfold mid-task | | the screen keeps its identity and state |
 
 It covers **SwiftUI** apps and **web / Capacitor** apps, with the same
@@ -79,6 +79,33 @@ skills/iphone-duo-fit/
   **168pt**.
 - A `.sheet` on the outer display is a card **8pt** inside the screen. Every
   presented screen on the closed Duo is a `fullScreenCover`.
+
+## How this differs from the other Duo skills
+
+There are more than twenty iPhone Duo skills on GitHub already (the
+most-installed are `mirzaaghazadeh/iphone-duo-skills`,
+`FloWritesCode/fwc-swiftui-skills` → `swiftui-iphone-duo`, `d-date/iphone-duo-skill`,
+`sven-ericmolzahn/iphone-duo-skill`, `anatoliykant/iphone-duo-plugin`), and
+Apple ships its own `app-resizability` skill with Xcode 27
+(`xcrun agent skills export`). Nearly all of them are catalogues of the
+27.1 APIs for apps that use the **system's** bars. This one is different in
+three ways:
+
+- **It is measured, not quoted.** The hardware axis (48pt), the capsule
+  (44pt), where the first control starts (168pt), where content stops
+  (76 / 88pt), and the tells of the traps (a sheet's 8pt translation, a
+  clipped column) come from pixel measurements on the simulator, and the
+  script that took them ships with it.
+- **It is for apps with their own chrome** — a custom bottom bar, a pill, a
+  floating action — which the system's vertical-bar behaviour does not
+  touch at all. It says how to stand *your* controls in the system's column
+  so they read as the system's.
+- **It covers the web half.** React / Capacitor apps get the same numbers,
+  the resize store that survives WebKit's late `innerWidth`, the safe-area
+  variables, and an honest account of what a webview cannot see (poses).
+
+If your app uses `NavigationStack` and `TabView` with the system's toolbars,
+start with Apple's skill and come here for the audit and the measurements.
 
 ## Licence
 

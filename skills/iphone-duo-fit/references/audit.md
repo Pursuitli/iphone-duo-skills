@@ -16,8 +16,8 @@ Columns:
 | pose | window | layout | chrome |
 |---|---|---|---|
 | closed | 466 × 678 | phone | strip in the system's column |
-| open upright | 626 × 890 | tablet | side bar |
-| open on its side | 890 × 626 | split | side bar + the pane under the column |
+| open upright | 669 × 951 | tablet | side bar |
+| open on its side | 951 × 669 | split | side bar + the pane under the column |
 | **closed → open** mid-task | | | state kept, chrome swaps on its curve |
 | **open → closed** mid-task | | | state kept, presented screens re-host as pages |
 
@@ -43,7 +43,7 @@ Closed pose:
 Open upright:
 - [ ] Tablet layout, one column; the side bar on the leading edge, icons
       only, names as accessibility labels, nothing shrunk.
-- [ ] No top bar wrapping its words at 626.
+- [ ] No top bar wrapping its words at 669.
 - [ ] Search / address lines fold sensibly: when a search field is up, the
       subtitle line goes.
 

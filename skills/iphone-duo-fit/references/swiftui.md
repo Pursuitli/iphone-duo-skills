@@ -265,7 +265,7 @@ drawn `g.size.width + g.safeAreaInsets.trailing` wide.
 | the phone chrome stretched across the open display | a 768 breakpoint | 600 |
 | an iPad shows the Duo's strip | Duo detected by width | ask the device |
 | the pane "sometimes overflows" | it measured its drawn width to choose its words | read the offered width at its root |
-| the top bar wraps its words at 626 | a bar designed for 834 | the side bar on the Duo |
+| the top bar wraps its words at 669 | a bar designed for 834 | the side bar on the Duo |
 | open state lost on a fold | a screen built once per layout branch | one place with structural identity; open state as data |
 | the bar minimises on the Duo | the minimiser runs under every chrome | return unless chrome == .bar |
 | "Executed 0 tests" | Swift Testing target | read the `.xcresult` summary |
