@@ -60,12 +60,26 @@ binaries until the 27.1 GM.
 | closed (outer) | 0 | 0 | 34 | **84** | ≈ 382 wide |
 | open upright | 82 | 0 | 83 | 0 | 669 × 786 |
 | open on its side | 24 | 0 | 34 | **84** | 867 × 611 |
+| closed, held on its side, lens left | 0 | **85** | ~21 | 0 | 593 × 445 |
+| closed, held on its side, lens right | 0 | 0 | ~21 | **85** | 593 × 445 |
 
 - The trailing 84 (an app sees ≈ 85 in `safeAreaInsets.trailing`) is the
   **system's column**: on the outer display and on the inner display on its
   side, the status bar, tab bar, toolbars and navigation bar all share one
   vertical bar on the hardware edge. **The inner display upright is the one
   pose that keeps horizontal bars** (top 82 / bottom 83).
+- **The closed Duo held on its side (678 × 466)** hides the status bar; the
+  reserved 85pt column is the camera's alone, on whichever side the lens
+  went: landscape-left puts the lens at the TOP of a LEFT column,
+  landscape-right at the FOOT of a RIGHT one. The lens is 37 across,
+  centred 48pt from both near edges, so it ends 66 in (pdf-duo simulator,
+  2026-10-26). 678 wide lands in the TABLET layout, so a chrome picked from
+  the width alone gives it the open Duo's side bar, which then stands
+  beside the empty camera column (157pt gone; owner on a real Duo). Keep
+  the strip there: the short side is under 600 only on the outer display.
+  The circles stand on the lens's 48pt axis, the first 16 under the lens
+  (top 82) or the foot 16 above it; seven circles do not fit 466 under the
+  lens, so carry six.
 - The fold on the open pose on its side is a **division region** about
   **40pt** wide, at x ≈ 455–495 of the 867 safe width. Reserved regions come
   from `GeometryProxy.reservedRegions(kind: .division | .occlusion)` in

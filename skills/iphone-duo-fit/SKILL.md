@@ -130,6 +130,12 @@ What that means for an app with its own bottom bar:
   41pt across), each circle **44pt** (the status capsule's size), the first
   circle's top **168pt** from the top (16 under the status cluster), 10
   between circles, 14 between groups.
+- **Held on its side the closed Duo is still the strip.** 678 × 466 is
+  the tablet width, but it is the outer display: the status bar hides and
+  the column is the camera's, left or right depending on which way it
+  turned. Pick the strip when the window's short side is under 600, and
+  stand the circles beside the lens on its 48pt axis, clear of it by 16
+  (`references/device-facts.md`).
 - **The content keeps the whole width up to the circles.** The place
   ignores the trailing inset and stops 6pt short of the circles' near edge
   (76pt from the edge); the list's own trailing padding shrinks to match. A
