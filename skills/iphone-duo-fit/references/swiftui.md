@@ -142,6 +142,68 @@ struct DuoStrip: View {
 }
 ```
 
+### The column follows the island
+
+The tops above (168 under the status cluster, 82 clear of the lens, 16 in
+the side bar) are the column **at rest**. A Live Activity, call, timer or
+recording grows the Dynamic Island down the column and the system takes the
+touches there, so circles left at 168 are drawn but dead. Read the
+occlusion regions in the column view itself, every layout, and take the
+larger of the rest value and 16 under the lowest region crossing the
+column. Put this in the ONE column view that the strip, the side bar and
+every presented page share, so they all move together (shipped in PDF Duo,
+26 Nov 2026):
+
+```swift
+struct DuoColumn: View {
+    // items, foot, size, top (nil = the reserved column's own rest value)…
+    var body: some View {
+        GeometryReader { g in
+            let clear = Occlusion.clearance(g)
+            DuoGlass {
+                VStack(spacing: 0) { /* circles, Spacer(minLength: 16), foot */ }
+                    .padding(.top, max(top ?? spot?.top ?? DuoStrip.underStatus, clear.top))
+                    .padding(.bottom, max(top == nil ? spot?.bottom ?? 24 : 24, clear.bottom))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .animation(.smooth(duration: 0.3), value: clear)
+        }
+    }
+}
+
+struct Occlusion: Equatable {
+    var top: CGFloat = 0, bottom: CGFloat = 0
+    static let gap: CGFloat = 16   // the rest values keep it: 152 + 16 = 168, 66 + 16 = 82
+
+    static func clearance(_ g: GeometryProxy) -> Occlusion {
+        var c = Occlusion()
+        guard #available(iOS 27.1, *) else { return c }
+        let h = g.size.height, w = g.size.width
+        for r in g.reservedRegions(kind: .occlusion) where r.isActive {
+            let m = r.margins   // the frame includes them; keep our own 16 from the rect
+            let rect = CGRect(x: r.frame.minX + m.leading, y: r.frame.minY + m.top,
+                              width: r.frame.width - m.leading - m.trailing,
+                              height: r.frame.height - m.top - m.bottom)
+            guard rect.maxX > 0, rect.minX < w, rect.maxY > 0, rect.minY < h else { continue }
+            if rect.midY < h / 2 { c.top = max(c.top, rect.maxY + gap) }
+            else { c.bottom = max(c.bottom, h - rect.minY + gap) }
+        }
+        return c
+    }
+}
+```
+
+- Frames are in the reader's own coordinate space, so the region and the
+  column's padding share one origin wherever the column sits (closed strip
+  over the trailing inset, the side bar under the 82pt top inset, a book
+  pane's floating column).
+- Regions arrive a few passes after launch and change while the app runs;
+  a `GeometryReader` re-evaluates when they do. Never cache them in `@State`.
+- The binary must be stamped with the 27.1 SDK or every query is empty
+  (`otool -l <App>.debug.dylib | grep -A4 LC_BUILD_VERSION`).
+- A system notification banner is not an occlusion region; it covers every
+  app for its few seconds and nothing should move for it.
+
 Apple's order in the column, top to bottom: navigation (places / Back /
 Close), then the prominent action, then groups with a 14pt gap. The
 prominent *creation* action (compose, new) sits at the foot under the thumb.
@@ -260,6 +322,7 @@ drawn `g.size.width + g.safeAreaInsets.trailing` wide.
 |---|---|---|
 | every column circle 8pt left and 8pt low of the inbox's; 8pt band of dark ground along the top and leading edge | the screen is hosted in `.sheet` | `fullScreenCover` while the chrome is the strip |
 | the letter stops short of the column and there are **no** circles | a zoom / transition wrapper clips the page to the safe width; the column is drawn outside it | clip only while scaling (`clipShape(Rectangle().inset(by: on ? 0 : -10_000))` so the view keeps its identity) |
+| the top circles **look fine but cannot be pressed** while a call, timer or Live Activity is running; at rest they work | the column's first circle is a constant (168, or 16 in the side bar) and the expanded Dynamic Island now lies over it, taking the touches | read `reservedRegions(kind: .occlusion)` in the column view and keep the first circle 16 under the lowest active region crossing it (§3 "The column follows the island") |
 | a screen's controls sit under the camera | a `NavigationStack` root did not get the shell's inset | top up to `contentInset` on that screen |
 | two presented screens' columns differ by 2pt | each did its own offset arithmetic | one shared `DuoColumnFrame` |
 | the phone chrome stretched across the open display | a 768 breakpoint | 600 |
@@ -269,3 +332,113 @@ drawn `g.size.width + g.safeAreaInsets.trailing` wide.
 | open state lost on a fold | a screen built once per layout branch | one place with structural identity; open state as data |
 | the bar minimises on the Duo | the minimiser runs under every chrome | return unless chrome == .bar |
 | "Executed 0 tests" | Swift Testing target | read the `.xcresult` summary |
+| **the clock, Wi-Fi and battery vanish** on the closed Duo (and open on its side) | the screen asks for `.lightContent` (white status text) because a coloured hero sits under the status bar on a normal iPhone; on the Duo the status bar moves into the side column, which the hero does not reach, so white text lands on the page's own white ground | answer the status-bar style per pose: when the window has a trailing inset (> 40pt, the column) on a Duo, return `.default` instead of `.lightContent`, so the system picks dark text on a light ground and light text on a dark ground (dark mode); re-ask on every window-size change (`setNeedsStatusBarAppearanceUpdate`). Do not try to paint the hero under the column instead: the glyphs vanish again as soon as the hero scrolls away. Seen on a real Duo, OmuType 2026-10-23 |
+| a page's title pushed off the top on the closed Duo | a fixed-size illustration (a 300 × 380 settings mock) plus title, steps and a button need ~720pt; the outer screen is 678 | scale the illustration on short windows (`windowSize.height < 760` → 72%), which also fixes the iPhone SE; never let a fixed drawing set the page's height |
+
+## 9. The column's vocabulary, screen by screen (what shipped, to the point)
+
+Everything in §3–§5 says where the column is. This says what stands in it,
+because the founder of the app that paid for these numbers checked every
+one on a screenshot, and the rules below are what survived.
+
+### Circles and glyphs
+
+| circle | glyph size | which glyphs |
+|---|---|---|
+| 44 (closed strip, every presented page's column) | **19** for a place icon, **18** for Back / Send / ⋯, **17** for the reply family, **16** for keyboard / forward, **15** for Close | the app's own icon set where it has one; SF Symbols at `.medium` weight otherwise |
+| 48 (open side bar) | **21** for a place icon, 17–19 for the rest | same |
+
+- **One stroke family in the column.** The Close circle first drew SF
+  `xmark` at 16 semibold beside circles whose glyphs were the app's thin
+  drawn icons, and it read as "too thick". It became the app's own close
+  glyph at 15, the same stroke as the back arrow. Whatever set you use, use
+  it for every circle; a mixed column looks like two apps.
+- **Verbs of one family share one drawing.** Reply all is the reply arrow
+  with a second head, built from the reply file, so stroke and curve are
+  identical; two straight arrows beside a U-turn arrow read as unrelated.
+  Keep one source file per glyph and let every surface (web, phone foot,
+  pane, column) take it from there.
+- The current place is the accent colour, every other glyph is ink; the
+  place carries `.isSelected` for VoiceOver. The prominent action (Send,
+  Compose, the microphone) is a filled accent circle with a white glyph.
+- Every circle: `.buttonStyle(PressScale())` (the press answers under the
+  finger), a `GlassID` in one shared namespace so circles morph rather than
+  cross-fade, `.contentShape(Circle())`, an `accessibilityLabel` with the
+  full name (the column has no words).
+- A circle that opens a menu is a `Menu` whose label is the same 44pt
+  frame with the same `GlassID`; a destructive item asks through a
+  `confirmationDialog` anchored to it. A circle that is busy shows a
+  `ProgressView` in place of its glyph (⋯ while exporting, Send while
+  sending); a circle that is unavailable is `.disabled` at 0.4 opacity, not
+  removed, so the column never re-flows while you look at it.
+
+### The order, top to bottom (10 between circles, 14 between groups)
+
+| screen (closed) | column |
+|---|---|
+| root places | Inbox, Sent, Calendar, Settings (the four circles under the status cluster at 168) · [16] · the view switch as a capsule stood on end · Spacer · Compose (accent) at the foot, 24 up |
+| Settings | Inbox alone (the one way home); the others return with the next place |
+| Trash | the four + Trash while you are in it |
+| composer / reply / forward | Close · Send (accent) · [14] · Attach (a menu: photos, files) · Formatting (accent stroke while its bar is up) |
+| invite form / edit event | Close · Send |
+| reader | Back · ⋯ (menu) · [14] · Speak (accent) · Type · [14] · Reply all · Reply · Forward; in Trash: Back · ⋯ · [14] · Forward |
+| opened event | no column: its own Back row; still a page, for the sheet's card and top gap |
+
+| screen (open) | side bar |
+|---|---|
+| root places | the five places at 48 · Spacer · (a view switch only if the product wants it there) · Spacer · Compose at the foot |
+| reader cover | the places · [14] · Reply all · Reply · Forward as extras · Compose; the capsule rests; a place tapped closes the letter (`onChange(of: tab) { close() }`); no microphone (the wide pane has no voice) |
+
+Apple's reasoning behind the order: navigation first, then the prominent
+action, then groups "with a vertical space between items from the top and
+bottom bars"; creation sits at the foot under the thumb.
+
+### The page around the column
+
+- Header: the title at 15 medium over a status line at 11.5 muted ("Draft
+  saved", "Guests get an email"), centred, one line each, 8 above and 12
+  below; no Cancel, no Done — they are circles. The reader has no header
+  at all on the closed Duo: 12pt of air, then the letter (Back is in the
+  column).
+- The paper stops at `pageInset` (88) through `DuoColumnFrame`; a list
+  under the root strip stops at `contentInset` (76) and its own trailing
+  row padding drops from 12 to 2, so rows gain the column's slack.
+- The foot's one object (a quick-reply field, a voice bar) is off by
+  default; the Speak or Type circle brings it in on the tab spring
+  (`.spring(duration: 0.36, bounce: 0)`, `.easeOut(0.2)` under Reduce
+  Motion) and it leaves when idle — the clip finished, the field left
+  empty. The keyboard's own bar (formatting) stays with the keyboard.
+- A cover picture at the top of a page runs under the column (ignores the
+  trailing inset, drawn `width + inset` wide) so the glass circles float on
+  it instead of standing beside a hard edge.
+
+### The strip's motion
+
+- Arrives and leaves with `.move(edge: .trailing).combined(with: .opacity)`;
+  the side bar with `.leading`; Reduce Motion → `.opacity`. The chrome
+  swap itself runs on `.timingCurve(0.32, 0.72, 0, 1, duration: 0.4)`.
+- A pushed panel (a settings sub-page) hides the strip as it hides the
+  phone's bar: a `chromeHidden` flag set in `onChange(of: path)` on the
+  same curve; the strip offsets out by its width + 24, fades, and stops
+  hit-testing. Back brings it in the same way.
+- Place changes animate the accent between circles on the tab spring; the
+  view-switch capsule slides its accent wash (13% accent fill, matched
+  geometry) between the two tabs.
+- The tab capsule stood on end: width = the circle size; each tab
+  (size − 8) × 48 inside a 44 column, (size − 10) × 52 inside a 48 one;
+  4 or 5 of padding; the whole capsule shares the circles' glass container.
+
+### The side bar's own numbers
+
+72 wide; 16 above the first place; 10 between places; extras start 14
+under the places; `Spacer(minLength: 16)` on either side of the capsule;
+24 below the foot circle; `frame(maxHeight: .infinity)`. Beside it, a
+reader pane keeps 8 leading, 24 trailing, 8 top.
+
+### The heading on the open pose
+
+The masthead carries the phone's 44pt search circle (there is no bar to
+hold a magnifier); while the field is up, or a term is set, the address
+line under the title folds on the masthead's swap transition — on every
+screen and every width, because the line says which addresses you are
+browsing and a search is not asking that.

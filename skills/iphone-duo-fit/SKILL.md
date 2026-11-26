@@ -130,6 +130,19 @@ What that means for an app with its own bottom bar:
   41pt across), each circle **44pt** (the status capsule's size), the first
   circle's top **168pt** from the top (16 under the status cluster), 10
   between circles, 14 between groups.
+- **168 is the column at rest; the Dynamic Island moves it.** A Live
+  Activity, a call, a timer or a recording grows the island down the
+  column, and the system takes the touches under it: circles fixed at 168
+  stay drawn but cannot be pressed (PDF Duo, closed and open, Nov 2026;
+  other apps' columns slide down with the island). iOS 27.1 reports the
+  island, the cameras and the status column as `.occlusion` reserved
+  regions. Read them in the column's own `GeometryReader` on every layout
+  and keep the first circle **16 under the lowest active region that
+  crosses the column** (16 under the reserved rect is the gap the rest
+  values already keep: 152 + 16 = 168, lens 66 + 16 = 82); a region in the
+  lower half pushes the foot up the same way. Take the larger of that and
+  the rest value, animate the change, and do it in the one column view
+  every strip, side bar and page shares (`references/swiftui.md` §3).
 - **Held on its side the closed Duo is still the strip.** 678 × 466 is
   the tablet width, but it is the outer display: the status bar hides and
   the column is the camera's, left or right depending on which way it
@@ -222,6 +235,10 @@ fade.
   pose from the command line, ask a person for the open pose, and use the
   iPad-sized stand-in with the debug switch for the side bar until then.
 
+## Status bar colour
+
+On the closed Duo (and open on its side) the status bar lives in the side column, not over the top of the page. A screen that asks for white status text because a coloured header sits under the status bar on other iPhones makes the clock, Wi-Fi and battery disappear on the Duo. Wherever the column is present, return `.default` so the system picks the readable colour, dark on light and light in dark mode, and ask again after every fold or rotation. `references/swiftui.md` §8 has the fix.
+
 ## What not to do
 
 - Do not branch on `horizontalSizeClass`, `userInterfaceIdiom`,
@@ -233,6 +250,8 @@ fade.
   rearrangement; a person who folds the phone loses no verb.
 - Do not treat iPads as Duos because the width matches; ask the device.
 - Do not report "aligned" from a screenshot you did not measure.
+- Do not hard-code the column's top as the final answer: it is the floor,
+  and the island's occlusion region decides the rest.
 
 ## Files
 
@@ -240,7 +259,9 @@ fade.
   metrics, simulator and Xcode facts, Apple's stated rules. Read first.
 - `references/swiftui.md` — the native recipe: the width reader, the device
   question, the strip, the side bar, the column frame, pages not sheets,
-  the traps and their tells.
+  the traps and their tells, and §9 the column's vocabulary screen by
+  screen (glyph sizes, order and gaps, busy/disabled states, the page
+  header, the foot object, the strip's motion).
 - `references/web.md` — React / Capacitor / CSS: breakpoints, the resize
   store, safe-area variables, DevTools device, what a webview can and cannot
   see of the poses.

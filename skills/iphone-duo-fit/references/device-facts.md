@@ -85,6 +85,16 @@ binaries until the 27.1 GM.
   from `GeometryProxy.reservedRegions(kind: .division | .occlusion)` in
   SwiftUI and `UIView.reservedRegions(kind:)` in UIKit; interactive
   elements displace away from the fold while scrolling content does not.
+- **Occlusion regions, measured by others** (27.1/27.2 simulators, not yet
+  hardware): closed and upright, two active regions, the camera
+  (400, 29) 37 × 37 and the status column (382, 0) 84 × 174 (longbridge/nsh
+  PR #3276; blakecrosley.com read 84 × 170); closed on its side, the status
+  area 84 × 82; open, the status column 84 × 120 active and the inner
+  camera 58 × 37 inactive. Regions arrive a few layout passes after launch
+  (empty at first), so read them in the body, never cache them. Apple lists
+  the Dynamic Island among occlusions; nobody has published how far the
+  frame grows with a Live Activity, so a column that hard-codes 168 sits
+  under an expanded island (see SKILL.md §3).
 - Safe areas are asymmetric and can flip: in right-to-left languages the
   column stays on the hardware side; in Split View each app's column is on
   its outer edge, so the left app's controls are on the left.
@@ -225,3 +235,13 @@ the wrong module or the wrong SDK.
 - The simulator device profile (path above): display 0 = 1398 × 2034, display 1 = 2007 × 2853, both scale 3
 - safearea.info (outer insets); blakecrosley.com/blog/iphone-duo-for-developers (669 × 951, the 1.42 problem); sarunw.com "adapting-*-for-iphone-duo" series; sven-ericmolzahn/iphone-duo-skill (simulator-measured inset table)
 - WebKit standards-positions issues 327 / 328; erkamyaman/capacitor-foldable issue #5 (the innerWidth timing bug)
+
+
+## Custom keyboards (keyboard extensions) on the Duo
+
+Measured with OmuType on a real iPhone Duo and the 27.1 simulator, 2026-10-23.
+
+- **Open, the keyboard gets the inner width** (669pt upright, 951pt on its side). A phone keyboard laid out by width stretches: letter keys ~60pt upright and ~88pt on its side against ~33pt on a phone, while the rows stay phone height. Split it by the keyboard view's own width (≥ 600pt: two halves, one per thumb, as Gboard and Android keyboards do on a Fold); never by the device, so an iPad gets the same.
+- **Open upright, iOS draws its globe in a margin left of the keys**, outside the extension's keys.
+- **Closed, iOS may draw its globe over the keyboard's bottom-left corner** (there is no bar under the keyboard on the outer screen). It appeared on some opens and not others; `needsInputModeSwitchKey` is read-only and setting it changes nothing. A keyboard that puts a key there (123) sees the globe on top of it. Not yet resolved: measure when it appears before giving way.
+- `UIScreen.main.bounds` in the extension is the outer screen even when open: read `window?.windowScene?.screen` for any screen-share cap (e.g. "at most 70% of the screen").
